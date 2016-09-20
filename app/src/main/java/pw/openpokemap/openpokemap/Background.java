@@ -11,8 +11,9 @@ import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.error.VolleyError;
+import com.android.volley.error.AuthFailureError;
+import com.android.volley.request.ByteRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.koushikdutta.async.http.AsyncHttpClient;
@@ -65,15 +66,14 @@ public class Background extends Service{
                                 final Map<String, String> mHeaders = new ArrayMap<String, String>();
                                 mHeaders.put("User-Agent", data.get("user"));
 
-                                StringRequest r = new StringRequest(finalData.get("meth") == "GET"
+                                ByteRequest r = new ByteRequest(finalData.get("meth") == "GET"
                                         ? Request.Method.GET : Request.Method.POST, finalData.get("host"),
-                                        new Response.Listener<String>(){
-
+                                        new Response.Listener<byte[]>(){
                                             @Override
-                                            public void onResponse(String response) {
-                                                Log.w("R", response);
+                                            public void onResponse(byte[] response) {
+                                                //Log.w("R", response);
                                                 Map<String, Object> f = new HashMap<String, Object>();
-                                                String to_send = Base64.encodeToString(response.getBytes(), Base64.NO_WRAP);
+                                                String to_send = Base64.encodeToString(response, Base64.NO_WRAP);
                                                 f.put("response", to_send);
                                                 f.put("status", 200);
                                                 Log.w("R", gson.toJson(f).toString())
@@ -89,7 +89,7 @@ public class Background extends Service{
                                     }
                                 }){
                                     @Override
-                                    public byte[] getBody() throws com.android.volley.AuthFailureError {
+                                    public byte[] getBody() throws com.android.volley.error.AuthFailureError {
                                         String to_send = finalData.get("data");
                                         byte[] data = Base64.decode(to_send, Base64.DEFAULT);
                                         return data;
