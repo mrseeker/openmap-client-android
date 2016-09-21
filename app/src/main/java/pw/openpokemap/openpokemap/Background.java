@@ -3,6 +3,7 @@ package pw.openpokemap.openpokemap;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.util.ArrayMap;
 import android.util.Base64;
@@ -32,6 +33,8 @@ public class Background extends Service{
     }
 
     public int onStartCommand(Intent intent, int flags, int startid) {
+        final Handler handler = new Handler();
+        final Service s = this;
         Log.w("Service", "Starting service");
         Gson gson = new Gson();
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -45,8 +48,13 @@ public class Background extends Service{
                     @Override
                     public void onCompleted(Exception ex, final WebSocket webSocket) {
                         if (ex != null){
-                            Log.w("Service", ex.getMessage());
-                            return;
+                            Log.e("WS", "Connection error!");
+                            handler.postDelayed(new Runnable() {
+                                public void run() {
+                                    s.stopSelf();
+                                    startService(new Intent(getApplicationContext(), Background.class));
+                                }
+                            }, 2*60*1000);
                         }
 
                         Log.w("R", "Connected");
